@@ -12,7 +12,8 @@ class DataGenerator(BaseDataGenerator):
 
   def load_NAB_dataset(self, dataset, y_scale=6):
     data_dir = '../datasets/' + self.config['data_dir'] #NAB-known-anomaly/'
-    data = np.load(data_dir + dataset + '.npz')
+    #data = np.load(data_dir + dataset + '.npz')
+    data = np.load(data_dir + self.config['filename'] + '.npz')
 
     # normalise the dataset by training set mean and std
     train_m = data['train_m']
@@ -36,30 +37,37 @@ class DataGenerator(BaseDataGenerator):
     axs.set_ylim(-y_scale, y_scale)
     axs.set_xlabel("timestamp (every {})".format(data['t_unit']))
     axs.set_ylabel("readings")
-    axs.set_title("{} dataset\n(normalised by train mean {:.4f} and std {:.4f})".format(dataset, train_m, train_std))
+    # axs.set_title("{} dataset\n(normalised by train mean {:.4f} and std {:.4f})".format(dataset, train_m, train_std))
     axs.legend(('data', 'train test set split', 'anomalies'))
     savefig(self.config['result_dir'] + '/raw_data_normalised.pdf')
 
     # slice training set into rolling windows
     n_train_sample = len(data['training'])
+    print("training: ", data['training'])
     n_train_vae = n_train_sample - self.config['l_win'] + 1
-    rolling_windows = np.zeros((n_train_vae, self.config['l_win']))
+    rolling_windows = np.zeros((n_train_vae, self.config['l_win'], data['training'].shape[1]))
+    print("training: ", rolling_windows.shape)
     for i in range(n_train_sample - self.config['l_win'] + 1):
       rolling_windows[i] = data['training'][i:i + self.config['l_win']]
 
     # create VAE training and validation set
     idx_train, idx_val, self.n_train_vae, self.n_val_vae = self.separate_train_and_val_set(n_train_vae)
-    self.train_set_vae = dict(data=np.expand_dims(rolling_windows[idx_train], -1))
-    self.val_set_vae = dict(data=np.expand_dims(rolling_windows[idx_val], -1))
-    self.test_set_vae = dict(data=np.expand_dims(rolling_windows[idx_val[:self.config['batch_size']]], -1))
-
+    if self.config['n_channel'] == 1:
+        self.train_set_vae = dict(data=np.expand_dims(rolling_windows[idx_train], -1))
+        self.val_set_vae = dict(data=np.expand_dims(rolling_windows[idx_val], -1))
+        self.test_set_vae = dict(data=np.expand_dims(rolling_windows[idx_val[:self.config['batch_size']]], -1))
+    else:
+        self.train_set_vae = dict(data=rolling_windows[idx_train])
+        self.val_set_vae = dict(data=rolling_windows[idx_val])
+        self.test_set_vae = dict(data=rolling_windows[idx_val[:self.config['batch_size']]])
+    
     # create LSTM training and validation set
     for k in range(self.config['l_win']):
       n_not_overlap_wins = (n_train_sample - k) // self.config['l_win']
       n_train_lstm = n_not_overlap_wins - self.config['l_seq'] + 1
-      cur_lstm_seq = np.zeros((n_train_lstm, self.config['l_seq'], self.config['l_win']))
+      cur_lstm_seq = np.zeros((n_train_lstm, self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
       for i in range(n_train_lstm):
-        cur_seq = np.zeros((self.config['l_seq'], self.config['l_win']))
+        cur_seq = np.zeros((self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
         for j in range(self.config['l_seq']):
           # print(k,i,j)
           cur_seq[j] = data['training'][k + self.config['l_win'] * (j + i): k + self.config['l_win'] * (j + i + 1)]
@@ -71,8 +79,12 @@ class DataGenerator(BaseDataGenerator):
 
     n_train_lstm = lstm_seq.shape[0]
     idx_train, idx_val, self.n_train_lstm, self.n_val_lstm = self.separate_train_and_val_set(n_train_lstm)
-    self.train_set_lstm = dict(data=np.expand_dims(lstm_seq[idx_train], -1))
-    self.val_set_lstm = dict(data=np.expand_dims(lstm_seq[idx_val], -1))
+    if self.config['n_channel'] == 1:
+        self.train_set_lstm = dict(data=np.expand_dims(lstm_seq[idx_train], -1))
+        self.val_set_lstm = dict(data=np.expand_dims(lstm_seq[idx_val], -1))
+    else:
+        self.train_set_lstm = dict(data=lstm_seq[idx_train])
+        self.val_set_lstm = dict(data=lstm_seq[idx_val])
 
   def plot_time_series(self, data, time, data_list):
     fig, axs = plt.subplots(1, 4, figsize=(18, 2.5), edgecolor='k')

@@ -36,19 +36,23 @@ def process_config(json_file):
   # create directories to save experiment results and trained models
   if config['load_dir'] == "default":
     save_dir = "../experiments/local-results/{}/{}/batch-{}".format(
-      config['exp_name'], config['dataset'], config['batch_size'])
+      config['exp_name'],
+      config['dataset'], 
+      config['batch_size'])
   else:
     save_dir = config['load_dir']
   # specify the saving folder name for this experiment
   if config['TRAIN_sigma'] == 1:
-    save_name = '{}-{}-{}-{}-{}-trainSigma'.format(config['exp_name'],
-                                                   config['dataset'],
+    save_name = '{}-{}-{}-{}-trainSigma'.format(config['filename'],
+                                                   #config['exp_name'],
+                                                   #config['dataset'],
                                                    config['l_win'],
                                                    config['l_seq'],
                                                    config['code_size'])
   else:
-    save_name = '{}-{}-{}-{}-{}-fixedSigma-{}'.format(config['exp_name'],
-                                                      config['dataset'],
+    save_name = '{}-{}-{}-{}-fixedSigma-{}'.format(config['filename'],
+                                                      #config['exp_name'],
+                                                      #config['dataset'],
                                                       config['l_win'],
                                                       config['l_seq'],
                                                       config['code_size'],
