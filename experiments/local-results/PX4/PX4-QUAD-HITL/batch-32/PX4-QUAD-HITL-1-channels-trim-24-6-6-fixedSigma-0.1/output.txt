@@ -1,0 +1,67 @@
+{
+    "exp_name": "PX4",
+    "dataset": "PX4-QUAD-HITL",
+    "filename": "PX4-QUAD-HITL-1-channels-trim",
+    "data_dir": "UAV-Attack-Dataset/PX4-QUAD-HITL/GPS-Spoofing/",
+    "y_scale": 5,
+    "one_image": 0,
+    "l_seq": 6,
+    "l_win": 24,
+    "n_channel": 1,
+    "TRAIN_VAE": 1,
+    "TRAIN_LSTM": 1,
+    "TRAIN_sigma": 0,
+    "batch_size": 32,
+    "batch_size_lstm": 32,
+    "load_model": 1,
+    "load_dir": "default",
+    "num_epochs_vae": 50,
+    "num_epochs_lstm": 100,
+    "learning_rate_vae": 0.0004,
+    "learning_rate_lstm": 0.0002,
+    "code_size": 6,
+    "sigma": 0.1,
+    "sigma2_offset": 0.01,
+    "num_hidden_units": 512,
+    "num_hidden_units_lstm": 64
+}
+
+The given sequence has 583 samples
+(560, 24, 1)
+(440, 6, 24, 1)
+
+25% percentile: 9042.013353181479
+75% percentile: 1481698.140915038
+These windows scored the top 1% of anomaly metric (11948051.781616595): 
+49
+
+25% percentile: 63.624883600615654
+75% percentile: 105.10021702328888
+These windows scored the top 1% of anomaly metric (159.81109043460216): 
+16
+
+25% percentile: 115.25624574206452
+75% percentile: 200.2093516349696
+These windows scored the top 1% of anomaly metric (270.98378403678316): 
+[429 430 431 432 433]
+
+Best F1 score is 0.6597402597402597
+Best threshold is 142.48076497596048
+At this threshold, precision is 0.5269709543568465, recall is 0.8819444444444444
+Average precision is 0.42292832230945593
+
+Augmented detection:
+Best F1 score is 0.8727272727272727
+Best threshold is 233.2101705485049
+At this threshold, precision is 0.7741935483870968, recall is 1.0
+Average precision is 0.7741935483870968
+
+Threshold is 233.2101705485049
+
+PR evaluation using augmented detection:
+Precision: 0.7741935483870968
+Recall: 1.0
+F1: 0.8727272727272727
+TP: 144
+FP: 42
+FN: 0
