@@ -1,0 +1,82 @@
+{
+    "exp_name": "PX4",
+    "dataset": "PX4-QUAD-HITL",
+    "filename": "PX4-QUAD-HITL-1-channels-trim",
+    "data_dir": "UAV-Attack-Dataset/PX4-QUAD-HITL/GPS-Spoofing/",
+    "y_scale": 5,
+    "one_image": 0,
+    "l_seq": 9,
+    "l_win": 24,
+    "n_channel": 1,
+    "TRAIN_VAE": 1,
+    "TRAIN_LSTM": 1,
+    "TRAIN_sigma": 0,
+    "batch_size": 32,
+    "batch_size_lstm": 32,
+    "load_model": 1,
+    "load_dir": "default",
+    "num_epochs_vae": 50,
+    "num_epochs_lstm": 100,
+    "learning_rate_vae": 0.0004,
+    "learning_rate_lstm": 0.0002,
+    "code_size": 6,
+    "sigma": 0.1,
+    "sigma2_offset": 0.01,
+    "num_hidden_units": 512,
+    "num_hidden_units_lstm": 64
+}
+
+The given sequence has 583 samples
+(560, 24, 1)
+(368, 9, 24, 1)
+
+25% percentile: 9913.801973702632
+75% percentile: 3404806.831015354
+These windows scored the top 1% of anomaly metric (7478110.236545503): 
+84
+
+25% percentile: 97.77055943925367
+75% percentile: 135.82231730752275
+These windows scored the top 1% of anomaly metric (192.3352848988291): 
+15
+
+25% percentile: 215.16897686094234
+75% percentile: 292.65190630699124
+These windows scored the top 1% of anomaly metric (443.1103831315666): 
+[118 141 142 148]
+
+Best F1 score is 0.7465277777777778
+Best threshold is [166.82320225 165.03721993]
+At this threshold, precision is [0.59722222 0.59722222], recall is [0.99537037 0.99537037]
+Average precision is 0.633077625145423
+
+Augmented detection:
+Best F1 score is 1.0
+Best threshold is [474.01216183 472.22617951 470.44019718 468.65421486 466.86823254
+ 465.08225021 463.29626789 461.51028557 459.72430324 457.93832092
+ 456.1523386  454.36635627 452.58037395 450.79439163 449.00840931
+ 447.22242698 445.43644466 443.65046234 441.86448001 440.07849769
+ 438.29251537 436.50653304 434.72055072 432.9345684  431.14858607
+ 429.36260375 427.57662143 425.7906391  424.00465678 422.21867446
+ 420.43269214 418.64670981 416.86072749 415.07474517 413.28876284
+ 411.50278052 409.7167982  407.93081587 406.14483355 404.35885123
+ 402.5728689  400.78688658 399.00090426 397.21492194 395.42893961
+ 393.64295729 391.85697497 390.07099264 388.28501032 386.499028
+ 384.71304567 382.92706335 381.14108103 379.3550987  377.56911638
+ 375.78313406 373.99715173 372.21116941 370.42518709]
+At this threshold, precision is [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.
+ 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.
+ 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.], recall is [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.
+ 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.
+ 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+Average precision is 1.0
+
+Threshold is 474.01216182861026
+
+PR evaluation using augmented detection:
+Precision: 1.0
+Recall: 1.0
+F1: 1.0
+TP: 216
+FP: 0
+FN: 0

@@ -5,7 +5,7 @@
     "data_dir": "UAV-Attack-Dataset/PX4-QUAD-HITL/GPS-Spoofing/",
     "y_scale": 5,
     "one_image": 0,
-    "l_seq": 6,
+    "l_seq": 9,
     "l_win": 24,
     "n_channel": 1,
     "TRAIN_VAE": 1,
