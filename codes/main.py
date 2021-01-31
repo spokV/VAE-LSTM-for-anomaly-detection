@@ -88,14 +88,20 @@ def slice_rolling_windows_and_sequences(config, time_seq):
     n_sample = len(time_seq)
     print("The given sequence has {} samples".format(n_sample))
     n_vae_win = n_sample - config['l_win'] + 1
-    rolling_windows = np.zeros((n_vae_win, config['l_win'], config['n_channel']), dtype=float)
+    if config['n_channel'] == 1:
+        rolling_windows = np.zeros((n_vae_win, config['l_win']))
+    else:
+        rolling_windows = np.zeros((n_vae_win, config['l_win'], config['n_channel']), dtype=float)
     for i in range(n_vae_win):
         rolling_windows[i] = time_seq[i:i + config['l_win']]
         sample_m = np.mean(rolling_windows, axis=1)
         sample_std = np.std(rolling_windows, axis=1)
 
         n_lstm_seq = n_sample - config['l_seq']*config['l_win']+1
-        lstm_seq = np.zeros((n_lstm_seq, config['l_seq'], config['l_win'], config['n_channel']), dtype=float)
+        if config['n_channel'] == 1:
+            lstm_seq = np.zeros((n_lstm_seq, config['l_seq'], config['l_win']))
+        else:
+            lstm_seq = np.zeros((n_lstm_seq, config['l_seq'], config['l_win'], config['n_channel']), dtype=float)
     for i in range(n_lstm_seq):
         cur_seq = time_seq[i:i+config['l_seq']*config['l_win']]
         for j in range(config['l_seq']):
