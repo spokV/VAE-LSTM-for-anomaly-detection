@@ -45,7 +45,10 @@ class DataGenerator(BaseDataGenerator):
     n_train_sample = len(data['training'])
     print("training: ", data['training'])
     n_train_vae = n_train_sample - self.config['l_win'] + 1
-    rolling_windows = np.zeros((n_train_vae, self.config['l_win'], data['training'].shape[1]))
+    if self.config['n_channel'] == 1:
+        rolling_windows = np.zeros((n_train_vae, self.config['l_win']))
+    else:
+        rolling_windows = np.zeros((n_train_vae, self.config['l_win'], data['training'].shape[1]))
     print("training: ", rolling_windows.shape)
     for i in range(n_train_sample - self.config['l_win'] + 1):
       rolling_windows[i] = data['training'][i:i + self.config['l_win']]
@@ -65,9 +68,15 @@ class DataGenerator(BaseDataGenerator):
     for k in range(self.config['l_win']):
       n_not_overlap_wins = (n_train_sample - k) // self.config['l_win']
       n_train_lstm = n_not_overlap_wins - self.config['l_seq'] + 1
-      cur_lstm_seq = np.zeros((n_train_lstm, self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
+      if self.config['n_channel'] == 1:
+          cur_lstm_seq = np.zeros((n_train_lstm, self.config['l_seq'], self.config['l_win']))
+      else:
+          cur_lstm_seq = np.zeros((n_train_lstm, self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
       for i in range(n_train_lstm):
-        cur_seq = np.zeros((self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
+        if self.config['n_channel'] == 1:
+            cur_seq = np.zeros((self.config['l_seq'], self.config['l_win']))
+        else:
+            cur_seq = np.zeros((self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
         for j in range(self.config['l_seq']):
           # print(k,i,j)
           cur_seq[j] = data['training'][k + self.config['l_win'] * (j + i): k + self.config['l_win'] * (j + i + 1)]
