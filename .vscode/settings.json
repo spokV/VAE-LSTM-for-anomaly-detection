@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/home/user/virtualenvs/tf1/bin/python3",
+    "python.analysis.extraPaths": ["./codes"]
+}
