@@ -8,9 +8,9 @@ class DataGenerator(BaseDataGenerator):
   def __init__(self, config):
     super(DataGenerator, self).__init__(config)
     # load data here: generate 3 state variables: train_set, val_set and test_set
-    self.load_NAB_dataset(self.config['dataset'], self.config['y_scale'])
+    self.load_dataset(self.config['dataset'], self.config['y_scale'])
 
-  def load_NAB_dataset(self, dataset, y_scale=6):
+  def load_dataset(self, dataset, y_scale=6):
     data_dir = '../datasets/' + self.config['data_dir'] #NAB-known-anomaly/'
     #data = np.load(data_dir + dataset + '.npz')
     data = np.load(data_dir + self.config['filename'] + '.npz')
