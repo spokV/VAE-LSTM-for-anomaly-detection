@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "args": [
-                "--config", "NAB_config.json"
+                "--config", "sepsis_config.json"
             ],
             "console": "integratedTerminal",
             "env": {

@@ -9,13 +9,16 @@ path = './datasets/sepsis'
 path_a = './datasets/sepsis/training_setB'
 path_b = './datasets/sepsis/training_setA'
 dataset = 'sepsis'
+save_dir = './datasets/sepsis/'
 channels_num = 6
 y_scale = 10
-save_file = False
+save_file = True
 
 target = np.empty((0,), float)
 training = np.empty((0,channels_num), float)
 columns = []
+anomalies = []
+test = []
 t_unit = 1
 
 #def process_and_save_specified_dataset(dataset, y_scale=5, save_file=False):
@@ -80,8 +83,8 @@ def process_and_save_specified_dataset(readings, idx_anomaly, y_scale=5, save_fi
                 for i in range(2):
                     axs[channel].plot(idx_split[i]*np.ones(20), np.linspace(-y_scale,y_scale,20), 'b--')
             """
-            for j in range(len(idx_anomaly)):
-                axs[channel].plot(idx_anomaly[j]*np.ones(20), np.linspace(-y_scale,y_scale,20), 'r--')
+            #for j in range(len(idx_anomaly)):
+            axs[channel].plot(idx_anomaly*np.ones(20), np.linspace(-y_scale,y_scale,20), 'r--')
             #     axs.plot(data[:,1])
             
             axs[channel].grid(True)
@@ -124,7 +127,6 @@ def plot_training_data(training, channels_num):
 
 
 for i in os.listdir(path_a):
-    anomalies = []
     data = pd.read_csv(path_a+'/'+i,sep = '|')
     data.drop(['EtCO2','Fibrinogen', 'Unit1', 'Unit2', 'BaseExcess', 'DBP', 'Hct', 'Hgb', 'PTT', 
     'WBC', 'pH','HCO3','FiO2', 'PaCO2', 'Platelets', 'Magnesium',  'Phosphate',  'Potassium', 
@@ -134,47 +136,50 @@ for i in os.listdir(path_a):
 
     #data.dropna(thresh=data.shape[1]*0.40,how='all',inplace = True)
     data.interpolate(axis=0, inplace=True)
-    La_1 = data['SepsisLabel'].sum()
-    """
-    if La_1:
-        y_train.append(1)
-    else:
-        y_train.append(0)
-    """
-    #filter = data["SepsisLabel"]==1
-    #data = data.apply(lambda x: x.fillna(x.median()),axis=0)
-    #data = data.fillna(0)
+    is_septic = True
+    if data['SepsisLabel'].sum() == 0:
+        is_septic = False
+    
     data.dropna(inplace=True)
-    idx_anomaly = data[data["SepsisLabel"]==1].index.values
+    idx_anomaly_local = data[data["SepsisLabel"]==1].index.values
+    plot = False
+    if idx_anomaly_local.size == 0:
+        idx_anomaly_local = np.append(idx_anomaly_local, [0])
+    else:
+        plot = False
     columns = data.columns
     
     if len(data) > 100:
-        target = np.append(target, data["SepsisLabel"].values, axis=0)
+        #target = np.append(target, data["SepsisLabel"].values, axis=0)
         data.drop(['SepsisLabel'],axis = 1,inplace = True)
-        
-        plot = False
-        if La_1 != 0:
+    
+        t, readings_normalised = process_and_save_specified_dataset(data, idx_anomaly_local[0], y_scale=10, plot=plot)
+        if is_septic is True:
             plot = False
-            anomalies.append(idx_anomaly[0])
-        t, readings_normalised = process_and_save_specified_dataset(data, anomalies, y_scale=10, plot=plot)
-        if La_1 >= 0:
+            test.append(readings_normalised)
+            anomalies.append(idx_anomaly_local[0])
+        else:
             training = np.append(training, readings_normalised, axis=0)
             if training.shape[0] > 1000:
                 break
+            
+def compose_final_data(training, test):
+    pass
 
 train_m = training.mean(axis=0) #np.mean(training[:channel])
 train_std = training.std(axis=0)
 print(training.shape)
 t = np.linspace(0, training.shape[0] - 1, training.shape[0])
 channels_num = training.shape[1]
-target = np.atleast_2d(target).T
-plot_training_data(np.append(training, target, axis=1), channels_num + 1)
+#target = np.atleast_2d(target).T
+#plot_training_data(np.append(training, target, axis=1), channels_num + 1)
+plot_training_data(training, channels_num)
 
 if save_file:
     #save_dir = './datasets/NAB-known-anomaly/'
-    np.savez(save_dir+dataset+'.npz', t=t, t_unit=t_unit, readings=readings, idx_anomaly=idx_anomaly,
-                idx_split=idx_split, training=training, test=test, train_m=train_m, train_std=train_std,
-                t_train=t_train, t_test=t_test, idx_anomaly_test=idx_anomaly_test)
+    np.savez(save_dir+dataset+'.npz', t_unit=t_unit,
+                training=training, test=test,
+                t_train=t, idx_anomaly_test=anomalies)
     print("\nProcessed time series are saved at {}".format(save_dir+dataset+'.npz'))
 else:
     print("\nProcessed time series are not saved.")

@@ -11,7 +11,7 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 import tensorflow as tf
-from data_loader import DataGenerator
+from data_loader_sepsis import DataGenerator
 from models import VAEmodel, lstmKerasModel
 from trainers import vaeTrainer
 
@@ -25,7 +25,7 @@ def get_available_gpus():
 print(get_available_gpus())
 
 # load VAE model
-config = process_config('NAB_config.json')
+config = process_config('sepsis_config.json')
 # create the experiments dirs
 create_dirs([config['result_dir'], config['checkpoint_dir']])
 # create tensorflow session
