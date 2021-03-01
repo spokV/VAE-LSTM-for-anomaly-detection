@@ -18,7 +18,7 @@ target = np.empty((0,), float)
 training = np.empty((0,channels_num), float)
 columns = []
 anomalies = []
-test = []
+test = np.empty((0,channels_num), float)
 t_unit = 1
 
 #def process_and_save_specified_dataset(dataset, y_scale=5, save_file=False):
@@ -99,7 +99,7 @@ def process_and_save_specified_dataset(readings, idx_anomaly, y_scale=5, save_fi
     
     return t, readings_normalised
 
-def plot_training_data(training, channels_num):
+def plot_training_data(training, t, channels_num):
     fig, axs = plt.subplots(channels_num, 1, figsize=(18, 17), edgecolor='k')
     fig.subplots_adjust(hspace=.4, wspace=.4)
     for channel in range(channels_num):
@@ -156,7 +156,8 @@ for i in os.listdir(path_a):
         t, readings_normalised = process_and_save_specified_dataset(data, idx_anomaly_local[0], y_scale=10, plot=plot)
         if is_septic is True:
             plot = False
-            test.append(readings_normalised)
+            #test.append(readings_normalised)
+            test = np.append(test, readings_normalised, axis=0)
             anomalies.append(idx_anomaly_local[0])
         else:
             training = np.append(training, readings_normalised, axis=0)
@@ -169,17 +170,19 @@ def compose_final_data(training, test):
 train_m = training.mean(axis=0) #np.mean(training[:channel])
 train_std = training.std(axis=0)
 print(training.shape)
-t = np.linspace(0, training.shape[0] - 1, training.shape[0])
+print(test.shape)
+t_train = np.linspace(0, training.shape[0] - 1, training.shape[0])
+t_test = np.linspace(0, test.shape[0] - 1, test.shape[0])
 channels_num = training.shape[1]
 #target = np.atleast_2d(target).T
 #plot_training_data(np.append(training, target, axis=1), channels_num + 1)
-plot_training_data(training, channels_num)
+plot_training_data(training, t_train, channels_num)
 
 if save_file:
     #save_dir = './datasets/NAB-known-anomaly/'
     np.savez(save_dir+dataset+'.npz', t_unit=t_unit,
                 training=training, test=test,
-                t_train=t, idx_anomaly_test=anomalies)
+                t_train=t_train, t_test=t_test, idx_anomaly_test=anomalies)
     print("\nProcessed time series are saved at {}".format(save_dir+dataset+'.npz'))
 else:
     print("\nProcessed time series are not saved.")
