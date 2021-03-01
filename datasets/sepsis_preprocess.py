@@ -13,6 +13,7 @@ save_dir = './datasets/sepsis/'
 channels_num = 6
 y_scale = 10
 save_file = True
+max_sample_length = 1000
 
 target = np.empty((0,), float)
 training = np.empty((0,channels_num), float)
@@ -20,6 +21,7 @@ columns = []
 anomalies = []
 test = np.empty((0,channels_num), float)
 t_unit = 1
+idx_anomaly_accu = 0
 
 #def process_and_save_specified_dataset(dataset, y_scale=5, save_file=False):
 #    t, t_unit, readings, idx_anomaly, idx_split, save_dir = load_data(dataset)
@@ -157,12 +159,16 @@ for i in os.listdir(path_a):
         if is_septic is True:
             plot = False
             #test.append(readings_normalised)
-            test = np.append(test, readings_normalised, axis=0)
-            anomalies.append(idx_anomaly_local[0])
+            if test.shape[0] < max_sample_length:
+                test = np.append(test, readings_normalised, axis=0)
+                idx_anomaly_accu += idx_anomaly_local[0]
+                anomalies.append(idx_anomaly_accu)
         else:
-            training = np.append(training, readings_normalised, axis=0)
-            if training.shape[0] > 1000:
+            if training.shape[0] < max_sample_length:
+                training = np.append(training, readings_normalised, axis=0)
+            else:
                 break
+            
             
 def compose_final_data(training, test):
     pass
