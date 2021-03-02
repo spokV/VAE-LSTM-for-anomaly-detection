@@ -101,22 +101,23 @@ def process_and_save_specified_dataset(readings, idx_anomaly, y_scale=5, save_fi
     
     return t, readings_normalised
 
-def plot_training_data(training, t, channels_num):
+def plot_training_data(data, t, channels_num, is_train=True):
     fig, axs = plt.subplots(channels_num, 1, figsize=(18, 17), edgecolor='k')
     fig.subplots_adjust(hspace=.4, wspace=.4)
     for channel in range(channels_num):
-        axs[channel].plot(t, training[:,channel])
+        axs[channel].plot(t, data[:,channel])
         """
         if idx_split[0] == 0:
             axs[channel].plot(idx_split[1]*np.ones(20), np.linspace(-y_scale,y_scale,20), 'b--')
         else:
             for i in range(2):
                 axs[channel].plot(idx_split[i]*np.ones(20), np.linspace(-y_scale,y_scale,20), 'b--')
-        
-        for j in range(len(idx_anomaly)):
-            axs[channel].plot(idx_anomaly[j]*np.ones(20), np.linspace(-y_scale,y_scale,20), 'r--')
-        #     axs.plot(data[:,1])
         """
+        if is_train is False:
+            for j in range(len(anomalies)):
+                axs[channel].plot(anomalies[j]*np.ones(20), np.linspace(-y_scale,y_scale,20), 'r--')
+            #     axs.plot(data[:,1])
+        
         axs[channel].grid(True)
         axs[channel].set_xlim(0, len(t))
         axs[channel].set_ylim(-y_scale, y_scale)
@@ -182,7 +183,8 @@ t_test = np.linspace(0, test.shape[0] - 1, test.shape[0])
 channels_num = training.shape[1]
 #target = np.atleast_2d(target).T
 #plot_training_data(np.append(training, target, axis=1), channels_num + 1)
-plot_training_data(training, t_train, channels_num)
+plot_training_data(training, t_train, channels_num, is_train=True)
+plot_training_data(test, t_test, channels_num, is_train=False)
 
 if save_file:
     #save_dir = './datasets/NAB-known-anomaly/'

@@ -5,7 +5,7 @@
     "data_dir": "sepsis/",
     "y_scale": 10,
     "one_image": 0,
-    "l_seq": 6,
+    "l_seq": 3,
     "l_win": 24,
     "n_channel": 6,
     "TRAIN_VAE": 1,
