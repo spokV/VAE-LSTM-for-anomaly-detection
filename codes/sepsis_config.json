@@ -23,5 +23,6 @@
     "sigma": 0.1,
     "sigma2_offset": 0.01,
     "num_hidden_units": 512,
-    "num_hidden_units_lstm": 64
+    "num_hidden_units_lstm": 64,
+    "upsampling_factor": 2
 }

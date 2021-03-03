@@ -2,6 +2,7 @@ from base import BaseDataGenerator
 import numpy as np
 import matplotlib.pylab as plt
 from matplotlib.pyplot import savefig
+from scipy.interpolate import interp1d
 
 
 class DataGenerator(BaseDataGenerator):
@@ -15,44 +16,28 @@ class DataGenerator(BaseDataGenerator):
     #data = np.load(data_dir + dataset + '.npz')
     data = np.load(data_dir + self.config['filename'] + '.npz')
 
-    # normalise the dataset by training set mean and std
-    #train_m = data['train_m']
-    #train_std = data['train_std']
-    #readings_normalised = (data['readings'] - train_m) / train_std
-
-    # plot normalised data
-    """
-    fig, axs = plt.subplots(1, 1, figsize=(18, 4), edgecolor='k')
-    fig.subplots_adjust(hspace=.4, wspace=.4)
-    axs.plot(data['t'], readings_normalised)
-    if data['idx_split'][0] == 0:
-      axs.plot(data['idx_split'][1] * np.ones(20), np.linspace(-y_scale, y_scale, 20), 'b-')
-    else:
-      for i in range(2):
-        axs.plot(data['idx_split'][i] * np.ones(20), np.linspace(-y_scale, y_scale, 20), 'b-')
-    axs.plot(*np.ones(20), np.linspace(-y_scale, y_scale, 20), 'b--')
-    for j in range(len(data['idx_anomaly'])):
-      axs.plot(data['idx_anomaly'][j] * np.ones(20), np.linspace(-y_scale, 0.75 * y_scale, 20), 'r--')
-    axs.grid(True)
-    axs.set_xlim(0, len(data['t']))
-    axs.set_ylim(-y_scale, y_scale)
-    axs.set_xlabel("timestamp (every {})".format(data['t_unit']))
-    axs.set_ylabel("readings")
-    # axs.set_title("{} dataset\n(normalised by train mean {:.4f} and std {:.4f})".format(dataset, train_m, train_std))
-    axs.legend(('data', 'train test set split', 'anomalies'))
-    savefig(self.config['result_dir'] + '/raw_data_normalised.pdf')
-    """
+    training = data['training']
+    t_train_new = np.linspace(0, data['training'].shape[0] - 1, data['training'].shape[0]*self.config['upsampling_factor'])
+    training = np.pad(training, ((0,data['training'].shape[0]* (self.config['upsampling_factor'] - 1)),(0,0)), 'constant')
+    for i in range(data['training'].shape[1]):
+    #tr = data['training'][:,1]
+        #print(training.shape)
+        #print(data['t_train'].shape)
+        inter_func = interp1d(data['t_train'], data['training'][:,i], kind='cubic')
+        training[:,i] = inter_func(t_train_new)
+        #print(tr2.shape)
+    
     # slice training set into rolling windows
-    n_train_sample = len(data['training'])
-    print("training: ", data['training'])
+    n_train_sample = len(training)
+    print("training: ", training)
     n_train_vae = n_train_sample - self.config['l_win'] + 1
     if self.config['n_channel'] == 1:
         rolling_windows = np.zeros((n_train_vae, self.config['l_win']))
     else:
-        rolling_windows = np.zeros((n_train_vae, self.config['l_win'], data['training'].shape[1]))
+        rolling_windows = np.zeros((n_train_vae, self.config['l_win'], training.shape[1]))
     print("training: ", rolling_windows.shape)
     for i in range(n_train_sample - self.config['l_win'] + 1):
-      rolling_windows[i] = data['training'][i:i + self.config['l_win']]
+      rolling_windows[i] = training[i:i + self.config['l_win']]
 
     # create VAE training and validation set
     idx_train, idx_val, self.n_train_vae, self.n_val_vae = self.separate_train_and_val_set(n_train_vae)
@@ -72,15 +57,15 @@ class DataGenerator(BaseDataGenerator):
       if self.config['n_channel'] == 1:
           cur_lstm_seq = np.zeros((n_train_lstm, self.config['l_seq'], self.config['l_win']))
       else:
-          cur_lstm_seq = np.zeros((n_train_lstm, self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
+          cur_lstm_seq = np.zeros((n_train_lstm, self.config['l_seq'], self.config['l_win'], training.shape[1]))
       for i in range(n_train_lstm):
         if self.config['n_channel'] == 1:
             cur_seq = np.zeros((self.config['l_seq'], self.config['l_win']))
         else:
-            cur_seq = np.zeros((self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
+            cur_seq = np.zeros((self.config['l_seq'], self.config['l_win'], training.shape[1]))
         for j in range(self.config['l_seq']):
           # print(k,i,j)
-          cur_seq[j] = data['training'][k + self.config['l_win'] * (j + i): k + self.config['l_win'] * (j + i + 1)]
+          cur_seq[j] = training[k + self.config['l_win'] * (j + i): k + self.config['l_win'] * (j + i + 1)]
         cur_lstm_seq[i] = cur_seq
       if k == 0:
         lstm_seq = cur_lstm_seq

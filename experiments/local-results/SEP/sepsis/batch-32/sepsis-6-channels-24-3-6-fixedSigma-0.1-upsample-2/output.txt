@@ -1,0 +1,23 @@
+sample factor 1
+----------------
+Threshold is 417.49586677196635
+
+PR evaluation using augmented detection:
+Precision: 0.8738574040219378
+Recall: 1.0
+F1: 0.9326829268292682
+TP: 478
+FP: 69
+FN: 0
+
+sample factor 2
+----------------
+Threshold is 453.88005075678404
+
+PR evaluation using augmented detection:
+Precision: 0.9372549019607843
+Recall: 1.0
+F1: 0.9676113360323887
+TP: 478
+FP: 32
+FN: 0
