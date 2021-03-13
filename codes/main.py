@@ -213,7 +213,7 @@ def plot_histogram(test_anomaly_metric, n_bins, title, mean=None, std=None, xlim
 #     print("Std dev: {}".format(np.std(test_anomaly_list)))
     print("These windows scored the top 1% of anomaly metric ({}): \n{}".format(threshold_1, idx_large_error))
     return mean, std
-
+"""
 # Histogram of VAE ELBO loss - validation set
 vae_elbo_m, vae_elbo_std = plot_histogram(val_vae_elbo_loss, 100,
                                           'VAE ELBO error distribution on the val set',
@@ -221,10 +221,11 @@ vae_elbo_m, vae_elbo_std = plot_histogram(val_vae_elbo_loss, 100,
 
 # Histogram of LSTM reconstruction error - validation set 
 #  --> to decide the anomaly detection threshold
+
 lstm_recons_m, lstm_recons_std = plot_histogram(val_lstm_recons_error, 100,  
                                               'LSTM reconstruction error distribution on the val set', 
                                               mean=None, std=None, xlim=None)
-
+"""
 # Evaluate the anomaly metrics on the test windows and sequences
 n_test_lstm = test_seq.shape[0]
 
@@ -236,10 +237,11 @@ print("The total number of windows is {}".format(len(test_lstm_recons_error)))
 
 # Histogram of LSTM reconstruction error - test set 
 #  --> to detect anomaly now
+"""
 _, _ = plot_histogram(test_lstm_recons_error, 100,
                       'LSTM reconstruction error distribution on the test set', 
                       mean=lstm_recons_m, std=lstm_recons_std, xlim=None, saveplot=True)
-
+"""
 # Produce the ground truth anomaly indices 
 # if result['idx_split'][0] == 0:
 #     idx_anomaly_test = result['idx_anomaly_test']
@@ -272,6 +274,7 @@ def return_anomaly_idx_by_threshold(test_anomaly_metric, threshold):
 def augment_detected_idx(idx_detected_anomaly, anomaly_index):
     n_anomaly = len(anomaly_index)
     idx_detected_anomaly_extended = list(idx_detected_anomaly)
+    lag = 0
     for i in range(n_anomaly):
         #print(idx_detected_anomaly)
         for j in idx_detected_anomaly:
@@ -279,10 +282,11 @@ def augment_detected_idx(idx_detected_anomaly, anomaly_index):
                 in_original_detection = set(idx_detected_anomaly_extended)
                 currect_anomaly_win = set(anomaly_index[i])
                 idx_detected_anomaly_extended = idx_detected_anomaly_extended + list(currect_anomaly_win - in_original_detection)
+                lag = j - anomaly_index[i][0]
                 #print(j)
                 break
                 
-    return list(np.sort(idx_detected_anomaly_extended))
+    return list(np.sort(idx_detected_anomaly_extended)), lag
 
 def count_TP_FP_FN(idx_detected_anomaly, anomaly_index, test_labels):
     n_TP = 0
@@ -326,6 +330,8 @@ precision_aug = np.zeros(n_threshold)
 recall_aug = np.zeros(n_threshold)
 F1_aug = np.zeros(n_threshold)
 i = 0
+total_lag = 0
+detection_counter = 0
 threshold_list = np.linspace(np.amin(test_lstm_recons_error), np.amax(test_lstm_recons_error), n_threshold, endpoint=True)
 threshold_list = np.flip(threshold_list)
 for threshold in threshold_list:
@@ -337,13 +343,17 @@ for threshold in threshold_list:
     # augment the detection using the ground truth labels
     # a method to discount the factor one anomaly appears in multiple consecutive windows
     # introduced in "Unsupervised anomaly detection via variational auto-encoder for seasonal kpis in web applications"
-    idx_detection_lstm_augmented = augment_detected_idx(idx_detection_lstm, anomaly_index_lstm)
+    idx_detection_lstm_augmented, lag = augment_detected_idx(idx_detection_lstm, anomaly_index_lstm)
     precision_aug[i], recall_aug[i], F1_aug[i], _, _, _ = compute_precision_and_recall(idx_detection_lstm_augmented, 
                                                                                        anomaly_index_lstm, 
                                                                                        test_labels_lstm)
+    total_lag = total_lag + lag
+    if lag != 0:
+        detection_counter += 1
     i = i + 1
     #print(precision, recall, F1)
 
+print("Avg Lag is {}".format(total_lag/detection_counter))
 print("Best F1 score is {}".format(np.amax(F1)))
 idx_best_threshold = np.squeeze(np.argwhere(F1 == np.amax(F1)))
 print("Best threshold is {}".format(threshold_list[idx_best_threshold]))
@@ -362,15 +372,20 @@ average_precision_aug = np.sum(precision_aug[1:] * (recall_aug[1:] - recall_aug[
 print("Average precision is {}".format(average_precision_aug))
 
 # Now select a threshold
-threshold = threshold_list[idx_best_threshold[0]]
+print(idx_best_threshold.ndim)
+if idx_best_threshold.ndim > 0:
+    threshold = threshold_list[idx_best_threshold[0]]
+else:
+    threshold = threshold_list[idx_best_threshold]
 
 print("Threshold is {}".format(threshold))
 idx_detection = return_anomaly_idx_by_threshold(test_lstm_recons_error, threshold)
-idx_detection_augmented = augment_detected_idx(idx_detection, anomaly_index_lstm)
+idx_detection_augmented, lag = augment_detected_idx(idx_detection, anomaly_index_lstm)
 precision, recall, F1, n_TP, n_FP, n_FN = compute_precision_and_recall(idx_detection_augmented, 
                                                                        anomaly_index_lstm, 
                                                                        test_labels_lstm)
 print("\nPR evaluation using augmented detection:")
+print("Avg Lag is {}".format(lag))
 print("Precision: {}".format(precision))
 print("Recall: {}".format(recall))
 print("F1: {}".format(F1))
@@ -405,48 +420,58 @@ def plot_detected_anomalies(idx_detection, interval, dataset, result, detection_
     idx_anomaly_test = result['idx_anomaly_test']
         
     # plot detected sequences
-    fig, axs = plt.subplots(1, 1, figsize=(18, 5), edgecolor='k')
+    fig, axs = plt.subplots(2, 1, figsize=(18, 10), edgecolor='k')
     fig.subplots_adjust(hspace=.4, wspace=.4)
-    axs.plot(t_test, test)
+    axs[0].plot(t_test, test)
+
+    error = np.zeros(t_test.shape)
+    #error[0:len(test_lstm_recons_error)] = test_lstm_recons_error
+    error[-len(test_lstm_recons_error):] = test_lstm_recons_error
+    axs[1].plot(t_test, error)
+    axs[1].plot(t_test, threshold * np.ones(t_test.shape), 'r--')
+    print(t_test.shape)
+    print(test_lstm_recons_error.shape)
+    print(idx_detection)
     for j in range(len(idx_anomaly_test)):
         if j == 0:
-            axs.plot(idx_anomaly_test[j] * np.ones(20), np.linspace(-y_scale, y_scale, 20), 'r--', label='true anomalies')
+            axs[0].plot(idx_anomaly_test[j] * np.ones(20), np.linspace(-y_scale, y_scale, 20), 'r--', label='true anomalies')
         else:
-            axs.plot(idx_anomaly_test[j] * np.ones(20), np.linspace(-y_scale, y_scale, 20), 'r--')
+            axs[0].plot(idx_anomaly_test[j] * np.ones(20), np.linspace(-y_scale, y_scale, 20), 'r--')
         
     for i in range(len(detected_seq)):
         for j in detected_seq[i]:
             if j == detected_seq[0][0]:
-                axs.plot((j+interval*2) * np.ones(20), np.linspace(-y_scale, -0.8*y_scale, 20), 'g-', label='detected anomalies')
+                axs[0].plot((j+interval*2) * np.ones(20), np.linspace(-y_scale, -0.8*y_scale, 20), 'g-', label='detected anomalies')
             else:
-                axs.plot((j+interval*2) * np.ones(20), np.linspace(-y_scale, -0.8*y_scale, 20), 'g-')
+                axs[0].plot((j+interval*2) * np.ones(20), np.linspace(-y_scale, -0.8*y_scale, 20), 'g-')
     
     for j in range(len(idx_anomaly_test)):
-        axs.plot(idx_anomaly_test[j] * np.ones(20), np.linspace(-y_scale, y_scale, 20), 'r--')
+        axs[0].plot(idx_anomaly_test[j] * np.ones(20), np.linspace(-y_scale, y_scale, 20), 'r--')
 
     for i in range(len(detected_seq)):
         interval_x = np.asarray([detected_seq[i][0], detected_seq[i][-1]+interval*2])
         interval_y = np.asarray([y_scale,y_scale])
         if i == 0:
-            axs.fill_between(interval_x, interval_y, alpha=0.2, color='y', label='detected anomaly windows')
+            axs[0].fill_between(interval_x, interval_y, alpha=0.2, color='y', label='detected anomaly windows')
         else:
-            axs.fill_between(interval_x, interval_y, alpha=0.2, color='y')
+            axs[0].fill_between(interval_x, interval_y, alpha=0.2, color='y')
         interval_y = np.asarray([-y_scale,-y_scale])
-        axs.fill_between(interval_x, interval_y, alpha=0.2, color='y')
-    axs.grid(True)
-    axs.set_xlim(0, len(t_test))
+        axs[0].fill_between(interval_x, interval_y, alpha=0.2, color='y')
+    axs[0].grid(True)
+    axs[0].set_xlim(0, len(t_test))
+    axs[1].set_xlim(0, len(t_test))
     if y_lim is None:
-        axs.set_ylim(-y_scale, y_scale)
+        axs[0].set_ylim(-y_scale, y_scale)
     else:
-        axs.set_ylim(-y_scale, y_lim)
-    axs.set_xlabel("timestamp (every {})".format(result['t_unit']))
-    axs.set_ylabel("normalised readings")
+        axs[0].set_ylim(-y_scale, y_lim)
+    axs[0].set_xlabel("timestamp (every {})".format(result['t_unit']))
+    axs[0].set_ylabel("normalised readings")
     #axs.set_title("{} dataset test sequence\n(normalised by train mean {:.4f} and std {:.4f})\n Detection method: {}".format(dataset, 
     #                                                                                    result['train_m'], 
     #                                                                                    result['train_std'],
     #                                                                                    detection_method))
-    axs.set_title("{} dataset test sequence\n Detection method: {}".format(dataset, detection_method))
-    axs.legend()
+    axs[0].set_title("{} dataset test sequence\n Detection method: {}".format(dataset, detection_method))
+    axs[0].legend()
     savefig(config['result_dir']+'detected_anomalies_{}_aug_{}.pdf'.format(detection_method, augmented_flag))
 
 plot_detected_anomalies(idx_detection_augmented, 
