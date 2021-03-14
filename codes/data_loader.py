@@ -43,7 +43,7 @@ class DataGenerator(BaseDataGenerator):
 
     # slice training set into rolling windows
     n_train_sample = len(data['training'])
-    print("training: ", data['training'])
+    #print("training: ", data['training'])
     n_train_vae = n_train_sample - self.config['l_win'] + 1
     if self.config['n_channel'] == 1:
         rolling_windows = np.zeros((n_train_vae, self.config['l_win']))

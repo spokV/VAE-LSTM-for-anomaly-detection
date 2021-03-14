@@ -10,22 +10,29 @@ def load_data(dataset, csv_folder='./UAV-Attack-Dataset/'):
     print(os.getcwd())
     idx_split = []
     if dataset == 'PX4-VTOL-SITL':
-        csv_folder = './UAV-Attack-Dataset/PX4-VTOL-SITL/GPS-Spoofing/'
-        data_file = os.path.join(csv_folder, '2020-08-02-15-31-27-vehicle1-cut.csv')
-        anomalies = ['2015-01-27 00:00:00']
-        idx_split = [0, 300]
+        csv_folder_normal = './UAV-Attack-Dataset/PX4-VTOL-SITL/Normal/'
+        csv_folder_spoofed = './UAV-Attack-Dataset/PX4-VTOL-SITL/GPS-Spoofing/'
+        data_file_normal = os.path.join(csv_folder_normal, '2020-08-02-15-18-04-vehicle1.csv')
+        data_file_spoofed = os.path.join(csv_folder_spoofed, '2020-08-02-15-31-27-vehicle1.csv')
+        #features = ["roll", "pitch", "yawRate"]
+        features = ["roll", "pitch"]
+        #features = ["roll"]
+        anomalies = [395]#['2020-08-02 19:16:58']
+        cut_N = [100, 540]
+        cut_S = [120, 7000]
+        #idx_split = [0, 900]
         t_unit = '1 sec'
     elif dataset == 'PX4-QUAD-HITL':
         csv_folder_normal = './UAV-Attack-Dataset/PX4-QUAD-HITL/Normal/'
         csv_folder_spoofed = './UAV-Attack-Dataset/PX4-QUAD-HITL/GPS-Spoofing/'
         data_file_normal = os.path.join(csv_folder_normal, '2020-08-02-16-23-17-vehicle1.csv')
         data_file_spoofed = os.path.join(csv_folder_spoofed, '2020-08-02-18-57-48-vehicle1.csv')
-        features = ["roll", "pitch", "yawRate"]
-        #features = ["roll", "pitch"]
+        #features = ["roll", "pitch", "yawRate"]
+        features = ["roll", "pitch"]
         #features = ["roll"]
-        anomalies = [1152]#['2020-08-02 19:16:58']
+        anomalies = [1101]#['2020-08-02 19:16:58']
         cut_N = [0, 1250]
-        cut_S = [180, 1500]
+        cut_S = [180, 1400]
         #idx_split = [0, 900]
         t_unit = '1 sec'
     elif dataset == 'PX4-QUAD-SITL':
@@ -41,10 +48,17 @@ def load_data(dataset, csv_folder='./UAV-Attack-Dataset/'):
         idx_split = [0, 3000]
         t_unit = '1 sec'
     elif dataset == 'PX4-PLANE-SITL':
-        csv_folder = './UAV-Attack-Dataset/PX4-PLANE-SITL/GPS-Spoofing/'
-        data_file = os.path.join(csv_folder, '2020-08-02-19-56-41-vehicle1-cut.csv')
-        anomalies = ['2015-01-27 00:00:00']
-        idx_split = [0, 3000]
+        csv_folder_normal = './UAV-Attack-Dataset/PX4-PLANE-SITL/Normal/'
+        csv_folder_spoofed = './UAV-Attack-Dataset/PX4-PLANE-SITL/GPS-Spoofing/'
+        data_file_normal = os.path.join(csv_folder_normal, '2020-08-02-19-43-29-vehicle1.csv')
+        data_file_spoofed = os.path.join(csv_folder_spoofed, '2020-08-02-19-56-41-vehicle1.csv')
+        #features = ["roll", "pitch", "yawRate"]
+        features = ["roll", "pitch"]
+        #features = ["roll"]
+        anomalies = [456]#['2020-08-02 19:16:58']
+        cut_N = [0, 490]
+        cut_S = [180, 7000]
+        #idx_split = [0, 900]
         t_unit = '1 sec'
     elif dataset == 'PX4-H480-SITL':
         csv_folder = './UAV-Attack-Dataset/PX4-H480-SITL/GPS-Spoofing/'
@@ -155,7 +169,7 @@ def process_and_save_specified_dataset(dataset, y_scale=5, save_file=False):
     
     return t, readings_normalised
 
-dataset = 'PX4-QUAD-HITL'
+dataset = 'PX4-VTOL-SITL'
 #idx_split = [0,3300]
 
 t, readings_normalised = process_and_save_specified_dataset(dataset, save_file=True)#, idx_split)
