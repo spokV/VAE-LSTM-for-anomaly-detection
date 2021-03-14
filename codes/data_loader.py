@@ -51,7 +51,10 @@ class DataGenerator(BaseDataGenerator):
         rolling_windows = np.zeros((n_train_vae, self.config['l_win'], data['training'].shape[1]))
     print("training: ", rolling_windows.shape)
     for i in range(n_train_sample - self.config['l_win'] + 1):
-      rolling_windows[i] = data['training'][i:i + self.config['l_win']]
+        if self.config['n_channel'] == 1:
+            rolling_windows[i] = data['training'][i:i + self.config['l_win']].ravel()
+        else:
+            rolling_windows[i] = data['training'][i:i + self.config['l_win']]
 
     # create VAE training and validation set
     idx_train, idx_val, self.n_train_vae, self.n_val_vae = self.separate_train_and_val_set(n_train_vae)
@@ -78,8 +81,11 @@ class DataGenerator(BaseDataGenerator):
         else:
             cur_seq = np.zeros((self.config['l_seq'], self.config['l_win'], data['training'].shape[1]))
         for j in range(self.config['l_seq']):
-          # print(k,i,j)
-          cur_seq[j] = data['training'][k + self.config['l_win'] * (j + i): k + self.config['l_win'] * (j + i + 1)]
+            # print(k,i,j)
+            if self.config['n_channel'] == 1:
+                cur_seq[j] = data['training'][k + self.config['l_win'] * (j + i): k + self.config['l_win'] * (j + i + 1)].ravel()
+            else:
+                cur_seq[j] = data['training'][k + self.config['l_win'] * (j + i): k + self.config['l_win'] * (j + i + 1)]
         cur_lstm_seq[i] = cur_seq
       if k == 0:
         lstm_seq = cur_lstm_seq

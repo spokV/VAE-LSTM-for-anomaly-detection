@@ -38,6 +38,7 @@ class VAEmodel(BaseModel):
     init = tf.contrib.layers.xavier_initializer()
     with tf.variable_scope('encoder'):
       input_tensor = tf.expand_dims(self.original_signal, -1)
+      print("input_tensor", input_tensor.shape)
       if self.config['l_win'] == 24:
         conv_1 = tf.layers.conv2d(inputs=tf.pad(input_tensor, [[0, 0], [4, 4], [0, 0], [0, 0]], "SYMMETRIC"),
                                   filters=self.config['num_hidden_units'] / 16,

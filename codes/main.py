@@ -25,7 +25,7 @@ def get_available_gpus():
 print(get_available_gpus())
 
 # load VAE model
-config = process_config('NAB_config.json')
+config = process_config('PX4_config.json')
 # create the experiments dirs
 create_dirs([config['result_dir'], config['checkpoint_dir']])
 # create tensorflow session
