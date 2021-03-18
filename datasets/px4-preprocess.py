@@ -30,9 +30,9 @@ def load_data(dataset, csv_folder='./UAV-Attack-Dataset/'):
         #features = ["roll", "pitch", "yawRate"]
         features = ["roll", "pitch"]
         #features = ["roll"]
-        anomalies = [1101]#['2020-08-02 19:16:58']
+        anomalies = [1151]#['2020-08-02 19:16:58']
         cut_N = [0, 1250]
-        cut_S = [180, 1400]
+        cut_S = [180, 1280]
         #idx_split = [0, 900]
         t_unit = '1 sec'
     elif dataset == 'PX4-QUAD-SITL':
@@ -142,7 +142,7 @@ def process_and_save_specified_dataset(dataset, y_scale=5, save_file=False):
         print("\nProcessed time series are not saved.")
     
     # plot the whole normalised sequence
-    fig, axs = plt.subplots(channels_num + 1, 1, figsize=(18, 4), edgecolor='k')
+    fig, axs = plt.subplots(channels_num, 1, figsize=(18, 4), edgecolor='k')
     fig.subplots_adjust(hspace=.4, wspace=.4)
     # print("readings_normalised: ", readings_normalised[:,channel])
     # axs = axs.ravel()
@@ -158,18 +158,18 @@ def process_and_save_specified_dataset(dataset, y_scale=5, save_file=False):
             axs[channel].plot(idx_anomaly[j]*np.ones(20), np.linspace(-y_scale,y_scale,20), 'r--')
         #     axs.plot(data[:,1])
         axs[channel].grid(True)
-        axs[channel].set_xlim(0, len(t))
+        axs[channel].set_xlim(200, len(t))
         axs[channel].set_ylim(-y_scale, y_scale)
         axs[channel].set_xlabel("timestamp (every {})".format(t_unit))
         axs[channel].set_ylabel("normalised readings")
-        axs[channel].set_title("{} dataset\n(normalised by train mean {:.2f} and std {:.2f})".format(dataset, train_m[channel], train_std[channel]))
-        axs[channel].legend(('data', 'train test set split', 'anomalies'))
+        #axs[channel].set_title("{} dataset\n(normalised by train mean {:.2f} and std {:.2f})".format(dataset, train_m[channel], train_std[channel]))
+        axs[0].legend(('data', 'train test set split', 'anomalies'), loc='upper left')
         
     plt.show()
     
     return t, readings_normalised
 
-dataset = 'PX4-VTOL-SITL'
+dataset = 'PX4-QUAD-HITL'
 #idx_split = [0,3300]
 
 t, readings_normalised = process_and_save_specified_dataset(dataset, save_file=True)#, idx_split)
