@@ -91,3 +91,16 @@ class DataGenerator(BaseDataGenerator):
       axs[i].set_xlabel('time (h)')
       axs[i].set_xlim((np.amin(time) / 60., np.amax(time) / 60.))
     savefig(self.config['result_dir'] + '/raw_training_set_normalised.pdf')
+  
+  def upsample_test_samples(self, data, t):
+    test = data
+    t_test_new = np.linspace(0, data.shape[0] - 1, data.shape[0]*self.config['upsampling_factor'])
+    test = np.pad(test, ((0,data.shape[0]* (self.config['upsampling_factor'] - 1)),(0,0)), 'constant')
+    for i in range(data.shape[1]):
+    #tr = data['training'][:,1]
+        #print(training.shape)
+        #print(data['t_train'].shape)
+        inter_func = interp1d(t, data[:,i], kind='cubic')
+        test[:,i] = inter_func(t_test_new)
+    return test
+

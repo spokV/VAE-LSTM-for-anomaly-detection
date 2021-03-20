@@ -339,7 +339,8 @@ class lstmKerasModel:
     pass
 
   def create_lstm_model(self, config):
-    lstm_input = tf.keras.layers.Input(shape=(config['l_seq'] - 1, config['code_size']))
+    #lstm_input = tf.keras.layers.Input(shape=(config['l_seq'] - 1, config['code_size']))
+    lstm_input = tf.keras.layers.Input(shape=(config['l_seq'] - config['lstm_lag'], config['code_size']))
     LSTM1 = tf.keras.layers.LSTM(config['num_hidden_units_lstm'], return_sequences=True)(lstm_input)
     LSTM2 = tf.keras.layers.LSTM(config['num_hidden_units_lstm'], return_sequences=True)(LSTM1)
     lstm_output = tf.keras.layers.LSTM(config['code_size'], return_sequences=True, activation=None)(LSTM2)
@@ -358,8 +359,12 @@ class lstmKerasModel:
       self.embedding_lstm_train[i] = sess.run(model_vae.code_mean, feed_dict=feed_dict)
     print("Finish processing the embeddings of the entire dataset.")
     print("The first a few embeddings are\n{}".format(self.embedding_lstm_train[0, 0:5]))
-    self.x_train = self.embedding_lstm_train[:, :config['l_seq'] - 1]
-    self.y_train = self.embedding_lstm_train[:, 1:]
+    #self.x_train = self.embedding_lstm_train[:, :config['l_seq'] - 1]
+    #self.y_train = self.embedding_lstm_train[:, 1:]
+    self.x_train = self.embedding_lstm_train[:, :config['l_seq'] - config['lstm_lag']]
+    self.y_train = self.embedding_lstm_train[:, config['lstm_lag']:]
+    #print(self.x_train.shape)
+    #print(self.y_train.shape)
 
     self.embedding_lstm_test = np.zeros((data.n_val_lstm, config['l_seq'], config['code_size']))
     for i in range(data.n_val_lstm):
@@ -367,8 +372,10 @@ class lstmKerasModel:
                    model_vae.is_code_input: False,
                    model_vae.code_input: np.zeros((1, config['code_size']))}
       self.embedding_lstm_test[i] = sess.run(model_vae.code_mean, feed_dict=feed_dict)
-    self.x_test = self.embedding_lstm_test[:, :config['l_seq'] - 1]
-    self.y_test = self.embedding_lstm_test[:, 1:]
+    #self.x_test = self.embedding_lstm_test[:, :config['l_seq'] - 1]
+    #self.y_test = self.embedding_lstm_test[:, 1:]
+    self.x_test = self.embedding_lstm_test[:, :config['l_seq'] - config['lstm_lag']]
+    self.y_test = self.embedding_lstm_test[:, config['lstm_lag']:]
 
   def load_model(self, lstm_model, config, checkpoint_path):
     print(config['checkpoint_dir_lstm'] + 'checkpoint')
@@ -392,7 +399,7 @@ class lstmKerasModel:
     decoded_seq_vae = np.squeeze(sess.run(model_vae.decoded, feed_dict=feed_dict_vae))
     print("Decoded seq from VAE: {}".format(decoded_seq_vae.shape))
 
-    feed_dict_lstm = {model_vae.original_signal: np.zeros((config['l_seq'] - 1, config['l_win'], config['n_channel'])),
+    feed_dict_lstm = {model_vae.original_signal: np.zeros((config['l_seq'] - config['lstm_lag'], config['l_win'], config['n_channel'])),
                       model_vae.is_code_input: True,
                       model_vae.code_input: lstm_embedding_test[idx_test]}
     decoded_seq_lstm = np.squeeze(sess.run(model_vae.decoded, feed_dict=feed_dict_lstm))
@@ -413,12 +420,14 @@ class lstmKerasModel:
         axs[0 + j * 2].plot(np.arange(0, config['l_seq'] * config['l_win']),
                             np.reshape(decoded_seq_vae, (config['l_seq'] * config['l_win'])), 'r--')
         axs[1 + j * 2].plot(np.arange(config['l_win'], config['l_seq'] * config['l_win']),
-                            np.reshape(decoded_seq_lstm, ((config['l_seq'] - 1) * config['l_win'])), 'g--')
+                            np.reshape(decoded_seq_lstm, ((config['l_seq'] - config['lstm_lag']) * config['l_win'])), 'g--')
       else:
         axs[0 + j * 2].plot(np.arange(0, config['l_seq'] * config['l_win']),
                             np.reshape(decoded_seq_vae[:, :, j], (config['l_seq'] * config['l_win'])), 'r--')
-        axs[1 + j * 2].plot(np.arange(config['l_win'], config['l_seq'] * config['l_win']),
-                            np.reshape(decoded_seq_lstm[:, :, j], ((config['l_seq'] - 1) * config['l_win'])), 'g--')
+        print(np.arange(config['l_win'], config['l_seq'] * config['l_win']).shape)
+        print(np.reshape(decoded_seq_lstm[:, :, j], ((config['l_seq'] - config['lstm_lag']) * config['l_win'])).shape)
+        axs[1 + j * 2].plot(np.arange(config['l_win'], (config['l_seq'] - config['lstm_lag'] + 1) * config['l_win']),
+                            np.reshape(decoded_seq_lstm[:, :, j], ((config['l_seq'] - config['lstm_lag']) * config['l_win'])), 'g--')
       axs[0 + j * 2].set_title('VAE reconstruction - channel {}'.format(j))
       axs[1 + j * 2].set_title('LSTM reconstruction - channel {}'.format(j))
       for i in range(2):
@@ -435,8 +444,8 @@ class lstmKerasModel:
     axs = axs.ravel()
     for i in range(config['code_size']):
       axs[i].plot(np.arange(1, config['l_seq']), np.squeeze(self.embedding_lstm_test[idx_test, 1:, i]))
-      axs[i].plot(np.arange(1, config['l_seq']), np.squeeze(lstm_embedding_test[idx_test, :, i]))
-      axs[i].set_xlim(1, config['l_seq'] - 1)
+      axs[i].plot(np.arange(config['lstm_lag'], config['l_seq']), np.squeeze(lstm_embedding_test[idx_test, :, i]))
+      axs[i].set_xlim(1, config['l_seq'] - config['lstm_lag'])
       axs[i].set_ylim(-2.5, 2.5)
       axs[i].grid(True)
       axs[i].set_title('Embedding dim {}'.format(i))

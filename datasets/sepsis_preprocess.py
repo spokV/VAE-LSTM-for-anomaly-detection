@@ -22,6 +22,7 @@ anomalies = []
 test = np.empty((0,channels_num), float)
 t_unit = 1
 idx_anomaly_accu = 0
+k = 0
 
 #def process_and_save_specified_dataset(dataset, y_scale=5, save_file=False):
 #    t, t_unit, readings, idx_anomaly, idx_split, save_dir = load_data(dataset)
@@ -161,11 +162,17 @@ for i in os.listdir(path_a):
             plot = False
             #test.append(readings_normalised)
             if test.shape[0] < max_sample_length:
-                test = np.append(test, readings_normalised, axis=0)
-                idx_anomaly_accu += idx_anomaly_local[0]
-                anomalies.append(idx_anomaly_accu)
+                if k%3 == 0:
+                    test = np.append(test, readings_normalised, axis=0)
+                    idx_anomaly_accu += idx_anomaly_local[0]
+                    anomalies.append(idx_anomaly_accu)
+                    k += 1
         else:
-            if training.shape[0] < max_sample_length:
+            if k%3 != 0:
+                test = np.append(test, readings_normalised, axis=0)
+                idx_anomaly_accu += readings_normalised.shape[0]
+                k+=1
+            elif training.shape[0] < max_sample_length:
                 training = np.append(training, readings_normalised, axis=0)
             else:
                 break
