@@ -1,7 +1,7 @@
 {
     "exp_name": "SEP",
     "dataset": "sepsis",
-    "filename": "sepsis-6-channels",
+    "filename": "sepsis-6-channels-int-1",
     "data_dir": "sepsis/",
     "y_scale": 10,
     "one_image": 0,
@@ -25,5 +25,6 @@
     "num_hidden_units": 512,
     "num_hidden_units_lstm": 64,
     "upsampling_factor": 1,
-    "lstm_lag": 1
+    "lstm_lag": 1,
+    "interp_factor": 1
 }

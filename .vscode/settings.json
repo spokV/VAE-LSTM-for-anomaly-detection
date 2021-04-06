@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/linuxu/venv/tf1/bin/python3",
+    "python.pythonPath": "/home/linuxu/venv/dl/bin/python3",
     "python.analysis.extraPaths": [
         "./codes",
         "./datasets"

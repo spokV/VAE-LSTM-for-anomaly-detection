@@ -43,22 +43,22 @@ def process_config(json_file):
     save_dir = config['load_dir']
   # specify the saving folder name for this experiment
   if config['TRAIN_sigma'] == 1:
-    save_name = '{}-{}-{}-{}-trainSigma-lag-{}'.format(config['filename'],
+    save_name = '{}-{}-{}-{}-trainSigma-interp-{}'.format(config['filename'],
                                                    #config['exp_name'],
                                                    #config['dataset'],
                                                    config['l_win'],
                                                    config['l_seq'],
                                                    config['code_size'],
-                                                   config['lstm_lag'])
+                                                   config['interp_factor'])
   else:
-    save_name = '{}-{}-{}-{}-fixedSigma-{}-lag-{}'.format(config['filename'],
+    save_name = '{}-{}-{}-{}-fixedSigma-{}-interp-{}'.format(config['filename'],
                                                       #config['exp_name'],
                                                       #config['dataset'],
                                                       config['l_win'],
                                                       config['l_seq'],
                                                       config['code_size'],
                                                       config['sigma'],
-                                                      config['lstm_lag'])
+                                                      config['interp_factor'])
   config['summary_dir'] = os.path.join(save_dir, save_name, "summary/")
   config['result_dir'] = os.path.join(save_dir, save_name, "result/")
   config['checkpoint_dir'] = os.path.join(save_dir, save_name, "checkpoint/")

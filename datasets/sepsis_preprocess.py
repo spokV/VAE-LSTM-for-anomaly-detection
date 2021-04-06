@@ -4,6 +4,7 @@ import numpy as np
 import math
 import matplotlib.pylab as plt
 from matplotlib.pyplot import plot, ion, show, savefig, cla, figure
+from scipy.interpolate import interp1d
 
 path = './datasets/sepsis'
 path_a = './datasets/sepsis/training_setB'
@@ -13,8 +14,8 @@ save_dir = './datasets/sepsis/'
 channels_num = 6
 y_scale = 10
 save_file = True
-max_sample_length = 1000
 
+int_factor = 1
 target = np.empty((0,), float)
 training = np.empty((0,channels_num), float)
 columns = []
@@ -23,6 +24,12 @@ test = np.empty((0,channels_num), float)
 t_unit = 1
 idx_anomaly_accu = 0
 k = 0
+interpolate = True
+
+max_sample_length = 1000
+if interpolate == True:
+    int_factor = 3
+    max_sample_length = max_sample_length * int_factor
 
 #def process_and_save_specified_dataset(dataset, y_scale=5, save_file=False):
 #    t, t_unit, readings, idx_anomaly, idx_split, save_dir = load_data(dataset)
@@ -32,9 +39,11 @@ def process_and_save_specified_dataset(readings, idx_anomaly, y_scale=5, save_fi
     training = readings.values#readings[idx_split[0]:idx_split[1]]
     #t_train = t[idx_split[0]:idx_split[1]]
     t = np.linspace(0, training.shape[0] - 1, training.shape[0])
+    t_int = np.linspace(0, training.shape[0] - 1, training.shape[0] * int_factor)
     t_unit = 1
 
     readings_normalised = np.zeros(training.shape, dtype=float)
+    readings_normalised_int = np.zeros((training.shape[0] * int_factor, training.shape[1]), dtype=float)
     # print("shape: !!! ", training.shape)
 
     # normalise by training mean and std 
@@ -46,7 +55,13 @@ def process_and_save_specified_dataset(readings, idx_anomaly, y_scale=5, save_fi
     channels_num = len(train_m)
     for channel in range(channels_num):
         readings_normalised[:,channel] = (training[:,channel] - train_m[channel]) / train_std[channel]
+        if interpolate == True:
+            f = interp1d(t, readings_normalised[:,channel])
+            readings_normalised_int[:,channel] = f(t_int)
     
+    if interpolate == True:
+        readings_normalised = readings_normalised_int
+        t = t_int
     """
     training = readings_normalised[idx_split[0]:idx_split[1]]
     if idx_split[0] == 0:
@@ -69,7 +84,8 @@ def process_and_save_specified_dataset(readings, idx_anomaly, y_scale=5, save_fi
         print("\nProcessed time series are saved at {}".format(save_dir+dataset+'.npz'))
     else:
         print("\nProcessed time series are not saved.")
-    """
+    """       
+
     # plot the whole normalised sequence
     if plot==True:
         fig, axs = plt.subplots(channels_num, 1, figsize=(18, 17), edgecolor='k')
@@ -150,6 +166,7 @@ for i in os.listdir(path_a):
     if idx_anomaly_local.size == 0:
         idx_anomaly_local = np.append(idx_anomaly_local, [0])
     else:
+        idx_anomaly_local = idx_anomaly_local * int_factor
         plot = False
     columns = data.columns
     
